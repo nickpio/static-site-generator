@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from textnode import TextType
 
 class HTMLNode():
     def __init__(self, tag=None, value=None, children=None, props=None):
@@ -11,14 +12,12 @@ class HTMLNode():
         raise NotImplementedError
 
     def props_to_html(self):
-        props_list = []
-        if self.props == None or self.props == "":
+        if self.props is None:
             return ""
-
-        for item in self.props:
-             props_list.append(f' {item}="{self.props[item]}"')
-
-        return props_list
+        props_html = ""
+        for prop in self.props:
+            props_html += f' {prop}="{self.props[prop]}"'
+        return props_html
 
     def __repr__(self):
         return f"HTMLNode({self.tag}, {self.value}, {self.children}, {self.props})"
@@ -29,20 +28,43 @@ class LeafNode(HTMLNode):
         super().__init__(tag, value, None, props)
 
     def to_html(self):
-        if not self.value:
-            raise ValueError("All Leaf Nodes must have a value")
-
-        if self.tag == None:
+        if self.value is None:
+            raise ValueError("Invalid HTML: no value")
+        if self.tag is None:
             return self.value
-
-        html_props = self.props_to_html()
-        html = f"<{self.tag}"
-        for prop in html_props:
-            string = f"{prop}"
-            html += string
-
-        html += f">{self.value}</{self.tag}>"
-        return html
+        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
 
     def __repr__(self):
         return f"LeafNode({self.tag}, {self.value}, {self.props})"
+
+
+class ParentNode(HTMLNode):
+    def __init__(self, tag, children, props=None):
+        super().__init__(tag, None, children, props)
+
+    def to_html(self):
+        if self.tag is None:
+            raise ValueError("Invalid HTML: no tag")
+        if self.children is None:
+            raise ValueError("Invalid HTML: no children")
+        children_html = ""
+        for child in self.children:
+            children_html += child.to_html()
+        return f"<{self.tag}{self.props_to_html()}>{children_html}</{self.tag}>"
+
+
+def text_node_to_html_node(text_node):
+    if text_node.text_type == TextType.TEXT:
+        return LeafNode(None, text_node.text)
+    elif text_node.text_type == TextType.BOLD:
+        return LeafNode("b", text_node.text)
+    elif text_node.text_type == TextType.ITALIC:
+        return LeafNode("i", text_node.text)
+    elif text_node.text_type == TextType.CODE:
+        return LeafNode("code", text_node.text)
+    elif text_node.text_type == TextType.LINK:
+        return LeafNode("a", text_node.text, {"href": text_node.url})
+    elif text_node.text_type == TextType.IMAGE:
+        return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})
+    else:
+        raise ValueError(f"Invalid text type: {text_node.text_type}")
