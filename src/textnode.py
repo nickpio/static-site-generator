@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+
+from enum import Enum
+
+class TextType(Enum):
+    TEXT = "text (plain)"
+    BOLD = "**Bold Text**"
+    ITALIC = "_Italic Text_"
+    CODE = "`Code Text`"
+    LINK = "[anchor text](url)"
+    IMAGE = "![alt text](url)"
+
+class TextNode():
+    def __init__(self, text, text_type, url=None):
+        self.text = text
+        self.text_type = text_type
+        self.url = url
+
+    def __eq__(self, other):
+        if (self.text == other.text) and (self.text_type == other.text_type) and (self.url == other.url):
+            return True
+
+        return False
+
+    def __repr__(self):
+        return f"TextNode({self.text}, {self.text_type}, {self.url})"
